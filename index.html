@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="static/styles/style.css">
+</head>
+<body>
+    <div class="desc">
+        <ul>
+            <li>Right click to add new points</li>
+            <li>Left click on the currently selected point to delete it</li>
+            <li>Left click anywhere inside the green area of deselect the currently selected point</li>
+            <li>Joint two points to create a segment</li>
+            <li>Click and drag to adjust the points</li>    
+            <li>Zoom with the mouse wheel</li>    
+            <li>Pan around by clicking and dragging the mouse wheel</li>    
+        </ul>
+    </div>
+    <canvas class="canvas"></canvas>
+    <div class="control">
+        <button onclick="clearGraph()">Clear</button>
+        <button onclick="saveGraph()">Save</button>
+        <input type="color" class="color_chooser">
+        <button type="color" class="color_fixer" onclick="adjustColor()">Apply</input>
+    </div>
+    <script src="static/scripts/acc.js"></script>
+    <script src="static/scripts/points.js"></script>
+    <script src="static/scripts/segments.js"></script>
+    <script src="static/scripts/graph.js"></script>
+    <script src="static/scripts/editor.js"></script>
+    <script src="static/scripts/viewport.js"></script>
+    <script src="static/scripts/main.js"></script>
+    <script>
+        function addRandomSegment() {
+            const i1 = Math.floor(Math.random() * graph.points.length)
+            const i2 = Math.floor(Math.random() * graph.points.length)
+            if (i1 != i2) {
+                graph.addSegment(
+                    new Segment(graph.points[i1], graph.points[i2])
+                )
+            } else {
+                console.log(`segment can't be formed between a single point`)
+            }
+            srt.clearRect(0,0, canvas.width, canvas.height)
+            graph.draw(srt)
+        }
+        function addRandomPoint(){
+            graph.addPoint(
+                new Point(
+                    Math.random() * canvas.width,
+                    Math.random() * canvas.height
+                )
+            )
+            srt.clearRect(0,0,canvas.width, canvas.height)
+            graph.draw(srt)
+        }
+
+        const canvas = document.querySelector('.canvas')
+        const srt = canvas.getContext('2d')
+        canvas.style.background = localStorage.getItem('bgcolor')?localStorage.getItem('bgcolor'):'#2f5' 
+        canvas.height = 600
+        canvas.width = 600
+        var p1 = new Point(100,200)
+        var p2 = new Point(200,100)
+        var p3 = new Point(300,140)
+        var s1 = new Segment(p1,p2)
+        var s2 = new Segment(p3,p1)
+        var s3 = new Segment(p3,p2)
+        const graphInfo = localStorage.getItem('graph')? JSON.parse(localStorage.getItem('graph')): null
+        // const graph = new Graph([p1,p2,p3],[s1,s2,s3])
+        const graph = graphInfo ? Graph.load(graphInfo): new Graph([p1,p2,p3],[s1,s2,s3])
+        const viewport = new Viewport(canvas)
+        const editor = new Editor(viewport, graph)
+        function animate(){
+            viewport.reset()
+            editor.display()
+            requestAnimationFrame(animate)
+        }        
+        animate()
+        function clearGraph(){
+            editor.dispose()
+        }
+        function saveGraph(){
+            localStorage.setItem('graph', JSON.stringify(graph))
+            localStorage.setItem('bgcolor', canvas.style.background)
+        }
+        function adjustColor(){
+            color = document.querySelector('.color_chooser')
+            canvas.style.background = `${color.value}`
+            console.log(color.value)
+        }
+    </script>
+</body>
+</html>
